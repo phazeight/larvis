@@ -21,6 +21,7 @@ services:
     environment:
       OLLAMA_HOST: http://ollama:11434
       CHROMA_HOST: http://chromadb:8000
+      VAULT_PATH: /vault
     volumes:
       - ${VAULT_PATH}:/vault:ro
     depends_on:
