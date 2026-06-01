@@ -1,0 +1,32 @@
+services:
+  ollama:
+    image: ollama/ollama:0.6.2
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+
+  chromadb:
+    image: chromadb/chroma:latest
+    ports:
+      - "8000:8000"
+    volumes:
+      - larvis_chroma:/chroma/.chroma
+
+  larvis:
+    build: .
+    ports:
+      - "8765:8765"
+    env_file: .env
+    environment:
+      OLLAMA_HOST: http://ollama:11434
+      CHROMA_HOST: http://chromadb:8000
+    volumes:
+      - ${VAULT_PATH}:/vault:ro
+    depends_on:
+      - ollama
+      - chromadb
+
+volumes:
+  ollama_data:
+  larvis_chroma:
