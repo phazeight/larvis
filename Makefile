@@ -8,7 +8,8 @@ start:
 
 stop:
 	docker compose down
-	osascript -e 'quit app "Ollama"'
+	osascript -e 'quit app "Ollama"' 2>/dev/null || true
+	pkill -f llama-server 2>/dev/null || true
 	@echo "Larvis stopped."
 
 status:
