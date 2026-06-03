@@ -1,11 +1,4 @@
 services:
-  ollama:
-    image: ollama/ollama:0.6.2
-    ports:
-      - "11434:11434"
-    volumes:
-      - ollama_data:/root/.ollama
-
   chromadb:
     image: chromadb/chroma:latest
     ports:
@@ -19,15 +12,14 @@ services:
       - "8765:8765"
     env_file: .env
     environment:
-      OLLAMA_HOST: http://ollama:11434
+      # Reach native Mac Ollama (Metal GPU) from inside the container
+      OLLAMA_HOST: http://host.docker.internal:11434
       CHROMA_HOST: http://chromadb:8000
       VAULT_PATH: /vault
     volumes:
       - ${VAULT_PATH}:/vault:ro
     depends_on:
-      - ollama
       - chromadb
 
 volumes:
-  ollama_data:
   larvis_chroma:

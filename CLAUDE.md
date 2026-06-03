@@ -31,20 +31,31 @@ Larvis is a local MCP server + RAG pipeline. It serves a local LLM (Ollama), ind
 ## Dev workflow
 
 ```bash
-colima start --memory 10      # REQUIRED — default 6 GB is too small for llama3.1:8b
-cp .env.example .env          # configure VAULT_PATH etc.
-docker compose up -d          # start all services
-docker compose logs -f larvis # tail logs
-uv run larvis status          # health check
-uv run larvis reindex         # re-index vault (5-15 min first run)
+# 1. Start native Ollama (Mac app — uses Metal GPU)
+#    Download from https://ollama.com if not installed
+ollama serve &                 # or launch the menu bar app
+ollama pull llama3.1:8b        # first time only (~4.7 GB)
+ollama pull nomic-embed-text   # first time only (~274 MB)
+
+# 2. Start Docker services (chromadb + larvis only — no ollama container)
+colima start --memory 4        # 4 GB is enough without ollama in Docker
+cp .env.example .env           # configure VAULT_PATH etc. (first time only)
+docker compose up -d
+docker compose logs -f larvis  # should show "Ollama ready."
+
+# 3. Use the CLI
+uv run larvis status           # health check
+uv run larvis reindex          # index vault (fast with Metal GPU)
+uv run larvis ask "..."        # query
 ```
 
-## Known issues / version pins
+## Known issues / architecture notes
 
 | Issue | Fix |
 |-------|-----|
-| `ollama/ollama:latest` crashes with Go `synctest` panic | Pinned to `ollama/ollama:0.6.2` in docker-compose.yml — do not upgrade until confirmed stable |
-| Colima default 6 GB RAM OOMs with llama3.1:8b | Always start Colima with `--memory 10` |
+| Ollama in Docker has no Metal GPU access | Ollama runs natively on Mac; only chromadb + larvis are in Docker |
+| larvis container reaches Mac Ollama via | `http://host.docker.internal:11434` (set in docker-compose environment) |
+| CLI reaches Ollama via | `http://localhost:11434` (set in .env) |
 
 ## MCP tools (Phase 1)
 
