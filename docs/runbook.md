@@ -4,6 +4,20 @@ A human-friendly guide for starting, checking, and querying Larvis.
 
 ---
 
+## On/Off Switch
+
+Three commands, that's it:
+
+```bash
+cd ~/repos/larvis
+
+make start    # start Ollama + Docker containers
+make stop     # stop everything
+make status   # check health
+```
+
+---
+
 ## Prerequisites
 
 Before any of this works, two things must be running:
