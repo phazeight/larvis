@@ -10,7 +10,7 @@ Larvis is a local MCP server + RAG pipeline. It serves a local LLM (Ollama), ind
 
 - **Language:** Python 3.12+
 - **MCP framework:** FastMCP
-- **RAG:** LlamaIndex + ChromaDB
+- **RAG:** ollama Python client + ChromaDB + tiktoken (no LlamaIndex)
 - **LLM serving:** Ollama (llama3.1:8b generation, nomic-embed-text embeddings)
 - **Infra:** Docker Compose (dev on Mac, deploy to dedicated hardware later)
 - **Package manager:** uv
@@ -31,12 +31,20 @@ Larvis is a local MCP server + RAG pipeline. It serves a local LLM (Ollama), ind
 ## Dev workflow
 
 ```bash
+colima start --memory 10      # REQUIRED — default 6 GB is too small for llama3.1:8b
 cp .env.example .env          # configure VAULT_PATH etc.
 docker compose up -d          # start all services
 docker compose logs -f larvis # tail logs
-larvis status                 # health check
-larvis reindex                # re-index vault
+uv run larvis status          # health check
+uv run larvis reindex         # re-index vault (5-15 min first run)
 ```
+
+## Known issues / version pins
+
+| Issue | Fix |
+|-------|-----|
+| `ollama/ollama:latest` crashes with Go `synctest` panic | Pinned to `ollama/ollama:0.6.2` in docker-compose.yml — do not upgrade until confirmed stable |
+| Colima default 6 GB RAM OOMs with llama3.1:8b | Always start Colima with `--memory 10` |
 
 ## MCP tools (Phase 1)
 
