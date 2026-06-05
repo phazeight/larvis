@@ -52,4 +52,4 @@ def lifeos_sync_tasks() -> str:
 
 
 def main() -> None:
-    mcp.run(transport="sse", host="0.0.0.0", port=8765)
+    mcp.run(transport="streamable-http", host="0.0.0.0", port=8765)
