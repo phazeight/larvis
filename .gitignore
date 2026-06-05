@@ -6,3 +6,8 @@ __pycache__/
 dist/
 *.egg-info/
 .memory/
+.lb/cache.db
+.lb/cache.db-shm
+.lb/cache.db-wal
+.lb/issues.jsonl
+.lb/backups/
