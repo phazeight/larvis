@@ -57,13 +57,29 @@ uv run larvis ask "..."        # query
 | larvis container reaches Mac Ollama via | `http://host.docker.internal:11434` (set in docker-compose environment) |
 | CLI reaches Ollama via | `http://localhost:11434` (set in .env) |
 
-## MCP tools (Phase 1)
+## MCP tools (Phase 1 + 2)
 
 | Tool | Signature | Description |
 |------|-----------|-------------|
 | `larvis_ask` | `(query: str) -> str` | RAG + generation |
 | `larvis_search` | `(query: str, top_k?: int) -> List[str]` | Raw vault search |
 | `larvis_status` | `() -> dict` | Health check |
+| `lifeos_briefing` | `(session_id: str) -> str` | Morning kickoff — projects, tasks, commitments |
+| `lifeos_ask` | `(query: str, session_id: str) -> str` | Memory-aware vault query |
+| `lifeos_commit` | `(text: str) -> str` | Store a persistent commitment |
+| `lifeos_sync_tasks` | `() -> str` | Sync vault `#to-linear` tasks to Linear via lb |
+
+## Session ID convention
+
+Pass any stable string as `session_id` for lifeos tools. In Claude Code, use the conversation ID or any UUID. The same `session_id` groups conversation history together for multi-turn memory.
+
+## Vault task sync convention
+
+To sync a vault task to Linear, add `#to-linear` to any unchecked checkbox task:
+```
+- [ ] Fix the dishwasher gasket #to-linear
+```
+Then call `lifeos_sync_tasks` to push it to Linear via lb.
 
 ## Adding new agents (Phase 2+)
 
