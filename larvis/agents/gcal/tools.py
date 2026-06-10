@@ -54,3 +54,73 @@ def status() -> str:
     return "Calendar authorized.\nConfigured calendars:\n" + "\n".join(
         f"  - {c}" for c in cals
     )
+
+
+def find_time(duration_minutes: int, within: str = "week") -> str:
+    now = _now()
+    if within == "week":
+        end = now + timedelta(days=7)
+    else:
+        end = now.replace(hour=23, minute=59, second=59, microsecond=0)
+    try:
+        busy = client.free_busy(now, end)
+    except Exception as e:
+        return f"Calendar error: {e}"
+
+    slots = scheduling.open_slots(
+        busy,
+        now,
+        end,
+        _parse_hhmm(settings.gcal_work_start),
+        _parse_hhmm(settings.gcal_work_end),
+        duration_minutes,
+    )
+    label = "this week" if within == "week" else "today"
+    if not slots:
+        return f"No {duration_minutes}-minute openings in working hours {label}."
+
+    lines = [f"=== Open slots (>= {duration_minutes} min, {label}) ==="]
+    for s, e in slots:
+        lines.append(f"  {s.strftime('%a %b %d  %H:%M')} - {e.strftime('%H:%M')}")
+    return "\n".join(lines)
+
+
+def _build_context(events: list[dict]) -> str:
+    if not events:
+        return "No events in the next 7 days."
+    lines = []
+    for e in events:
+        if e["all_day"]:
+            when = e["start"].strftime("%a %b %d") + " all day"
+        else:
+            when = (
+                e["start"].strftime("%a %b %d %H:%M")
+                + "-"
+                + e["end"].strftime("%H:%M")
+            )
+        lines.append(f"  {when}  {e['summary']}")
+    return "\n".join(lines)
+
+
+def ask(query: str) -> str:
+    now = _now()
+    try:
+        events = client.list_events(now, now + timedelta(days=7))
+    except Exception as e:
+        return f"Calendar error: {e}"
+
+    context = _build_context(events)
+    try:
+        resp = ollama.Client(host=settings.ollama_host).generate(
+            model=settings.ollama_model,
+            prompt=(
+                "You are a calendar assistant. Answer the question using ONLY the "
+                "schedule below. Do not invent events. If the data does not contain "
+                "the answer, say so.\n\n"
+                f"Schedule (next 7 days):\n{context}\n\n"
+                f"Question: {query}"
+            ),
+        )
+        return resp.response
+    except Exception:
+        return context

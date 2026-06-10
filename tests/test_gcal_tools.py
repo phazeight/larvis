@@ -43,3 +43,31 @@ def test_status_reports_unauthorized(monkeypatch):
     monkeypatch.setattr(auth, "get_service", boom)
     out = tools.status()
     assert "gcal-auth" in out
+
+
+def test_find_time_returns_slot(monkeypatch):
+    busy = [(datetime(2026, 6, 10, 12, tzinfo=UTC), datetime(2026, 6, 10, 13, tzinfo=UTC))]
+    monkeypatch.setattr(tools, "_now", lambda: datetime(2026, 6, 10, 8, 0, tzinfo=UTC))
+    monkeypatch.setattr(client, "free_busy", lambda a, b: busy)
+    out = tools.find_time(60, "today")
+    assert "Open slots" in out
+
+
+def test_find_time_none_available(monkeypatch):
+    busy = [(datetime(2026, 6, 10, 9, tzinfo=UTC), datetime(2026, 6, 10, 17, tzinfo=UTC))]
+    monkeypatch.setattr(tools, "_now", lambda: datetime(2026, 6, 10, 8, 0, tzinfo=UTC))
+    monkeypatch.setattr(client, "free_busy", lambda a, b: busy)
+    out = tools.find_time(60, "today")
+    assert "No 60-minute openings" in out
+
+
+def test_ask_degrades_when_ollama_down(monkeypatch):
+    monkeypatch.setattr(client, "list_events", lambda a, b: [_event(11, 15, "Dentist")])
+
+    class Boom:
+        def __init__(self, *a, **k):
+            raise RuntimeError("ollama down")
+
+    monkeypatch.setattr(tools.ollama, "Client", Boom)
+    out = tools.ask("when is my dentist appointment?")
+    assert "Dentist" in out
