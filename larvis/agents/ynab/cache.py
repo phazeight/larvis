@@ -136,3 +136,52 @@ def is_synced() -> bool:
     with _conn() as conn:
         row = conn.execute("SELECT COUNT(*) AS n FROM sync_meta").fetchone()
     return row["n"] > 0
+
+
+def get_accounts() -> list[dict]:
+    with _conn() as conn:
+        rows = conn.execute(
+            "SELECT * FROM accounts WHERE deleted = 0 AND on_budget = 1"
+        ).fetchall()
+    return [dict(r) for r in rows]
+
+
+def get_categories(month: str) -> list[dict]:
+    with _conn() as conn:
+        rows = conn.execute(
+            "SELECT * FROM categories WHERE month = ? AND deleted = 0",
+            (month,),
+        ).fetchall()
+    return [dict(r) for r in rows]
+
+
+def get_transactions(since_date: str) -> list[dict]:
+    with _conn() as conn:
+        rows = conn.execute(
+            "SELECT * FROM transactions WHERE date >= ? AND deleted = 0 ORDER BY date DESC",
+            (since_date,),
+        ).fetchall()
+    return [dict(r) for r in rows]
+
+
+def get_scheduled(within_days: int = 14) -> list[dict]:
+    from datetime import date, timedelta
+    today = date.today().isoformat()
+    cutoff = (date.today() + timedelta(days=within_days)).isoformat()
+    with _conn() as conn:
+        rows = conn.execute(
+            "SELECT * FROM scheduled WHERE next_date >= ? AND next_date <= ? ORDER BY next_date",
+            (today, cutoff),
+        ).fetchall()
+    return [dict(r) for r in rows]
+
+
+def get_month_summary(month: str) -> dict:
+    with _conn() as conn:
+        row = conn.execute(
+            "SELECT * FROM months WHERE month = ?", (month,)
+        ).fetchone()
+    if row is None:
+        return {"month": month, "income": 0, "budgeted": 0,
+                "activity": 0, "to_be_budgeted": 0, "age_of_money": 0}
+    return dict(row)
