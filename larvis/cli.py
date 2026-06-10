@@ -1,10 +1,15 @@
 import json
+import os
 
 import click
+from google_auth_oauthlib.flow import InstalledAppFlow
 
 from larvis import rag
+from larvis.config import settings
 from larvis.health import get_status
 from larvis.indexer import index_vault
+
+GCAL_SCOPES = ["https://www.googleapis.com/auth/calendar.readonly"]
 
 
 @click.group()
@@ -45,3 +50,16 @@ def reindex() -> None:
 def status() -> None:
     """Health check — Ollama, ChromaDB, index state."""
     click.echo(json.dumps(get_status(), indent=2))
+
+
+@cli.command(name="gcal-auth")
+def gcal_auth() -> None:
+    """One-time Google Calendar OAuth — opens a browser for read-only consent."""
+    os.makedirs(os.path.dirname(settings.gcal_token_path) or ".", exist_ok=True)
+    flow = InstalledAppFlow.from_client_secrets_file(
+        settings.gcal_credentials_path, GCAL_SCOPES
+    )
+    creds = flow.run_local_server(port=0)
+    with open(settings.gcal_token_path, "w") as f:
+        f.write(creds.to_json())
+    click.echo(f"Authorized. Token saved to {settings.gcal_token_path}")
