@@ -15,6 +15,8 @@ class Settings(BaseSettings):
     rag_top_k: int = 5
     chunk_size: int = 500
     chunk_overlap: int = 50
+    ynab_api_key: str = ""
+    ynab_budget_id: str = "last-used"
 
 
 settings = Settings()
