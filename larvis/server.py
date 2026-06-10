@@ -2,6 +2,7 @@ from fastmcp import FastMCP
 
 from larvis import rag
 from larvis.agents.lifeos import tools as lifeos_tools
+from larvis.agents.ynab import tools as ynab_tools
 from larvis.health import get_status
 
 mcp = FastMCP("Larvis")
@@ -49,6 +50,30 @@ def lifeos_commit(text: str) -> str:
 def lifeos_sync_tasks() -> str:
     """Scan vault for #to-linear checkbox tasks and create Linear issues via lb."""
     return lifeos_tools.sync_tasks()
+
+
+@mcp.tool()
+def ynab_sync() -> str:
+    """Refresh local YNAB cache from the YNAB API (delta sync)."""
+    return ynab_tools.sync()
+
+
+@mcp.tool()
+def ynab_status() -> str:
+    """Budget dashboard — ready to assign, age of money, account total, over-budget categories."""
+    return ynab_tools.status()
+
+
+@mcp.tool()
+def ynab_ask(query: str) -> str:
+    """Ask a natural language question about your YNAB budget. Run ynab_sync first."""
+    return ynab_tools.ask(query)
+
+
+@mcp.tool()
+def ynab_upcoming() -> str:
+    """List scheduled transactions due in the next 14 days."""
+    return ynab_tools.upcoming()
 
 
 def main() -> None:

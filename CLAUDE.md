@@ -70,8 +70,9 @@ MCP reconnects automatically in Claude Code after restart. If larvis doesn't app
 | ChromaDB data path | Volume mounts to `/data` (container's `config.yaml`); was wrong path before fix |
 | lb auth inside Docker | `LINEAR_API_KEY` in `.env` — lb reads it via env var, no `~/.config/lb` needed |
 | FastMCP transport | Must use `transport="streamable-http"` in `server.py` — Claude Code connects to `/mcp`, not `/sse` |
+| YNAB cache empty on first run | Run `ynab_sync()` once to populate — persists across restarts |
 
-## MCP tools (Phase 1 + 2)
+## MCP tools (Phase 1 + 2 + 3)
 
 | Tool | Signature | Description |
 |------|-----------|-------------|
@@ -82,6 +83,10 @@ MCP reconnects automatically in Claude Code after restart. If larvis doesn't app
 | `lifeos_ask` | `(query: str, session_id: str) -> str` | Memory-aware vault query |
 | `lifeos_commit` | `(text: str) -> str` | Store a persistent commitment |
 | `lifeos_sync_tasks` | `() -> str` | Sync vault `#to-linear` tasks to Linear via lb |
+| `ynab_sync` | `() -> str` | Refresh local YNAB cache from YNAB API |
+| `ynab_status` | `() -> str` | Budget dashboard — TBB, age of money, over-budget |
+| `ynab_ask` | `(query: str) -> str` | NL budget query — Python math, Ollama narrates |
+| `ynab_upcoming` | `() -> str` | Scheduled transactions due in next 14 days |
 
 ## Session ID convention
 

@@ -11,3 +11,4 @@ dist/
 .lb/cache.db-wal
 .lb/issues.jsonl
 .lb/backups/
+.ynab/cache.db

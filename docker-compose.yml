@@ -18,9 +18,12 @@ services:
       VAULT_PATH: /vault
       LINEAR_API_KEY: ${LINEAR_API_KEY}
       LB_TEAM_KEY: ${LB_TEAM_KEY:-PHA}
+      YNAB_API_KEY: ${YNAB_API_KEY}
+      YNAB_BUDGET_ID: ${YNAB_BUDGET_ID:-last-used}
     volumes:
       - ${VAULT_PATH}:/vault:ro
       - ./.memory:/app/.memory
+      - ./.ynab:/app/.ynab
     depends_on:
       - chromadb
 
