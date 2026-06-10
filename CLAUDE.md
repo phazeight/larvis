@@ -54,7 +54,8 @@ uv run larvis ask "..."        # query
 ```bash
 colima start --memory 4   # start Docker runtime (if not running)
 make start                 # launches Ollama app + docker compose up
-uv run larvis reindex      # required after every restart (ChromaDB loses data on container recreate)
+# ChromaDB data persists across restarts — reindex only needed on first run or after vault changes
+uv run larvis reindex      # first time only, or after significant vault updates
 ```
 
 MCP reconnects automatically in Claude Code after restart. If larvis doesn't appear in `/mcp`, check `~/.claude.json` → top-level `mcpServers.larvis`.
@@ -66,7 +67,7 @@ MCP reconnects automatically in Claude Code after restart. If larvis doesn't app
 | Ollama in Docker has no Metal GPU access | Ollama runs natively on Mac; only chromadb + larvis are in Docker |
 | larvis container reaches Mac Ollama via | `http://host.docker.internal:11434` (set in docker-compose environment) |
 | CLI reaches Ollama via | `http://localhost:11434` (set in .env) |
-| ChromaDB loses data on `make stop && make start` | Run `uv run larvis reindex` after restart — takes ~10s |
+| ChromaDB data path | Volume mounts to `/data` (container's `config.yaml`); was wrong path before fix |
 | lb auth inside Docker | `LINEAR_API_KEY` in `.env` — lb reads it via env var, no `~/.config/lb` needed |
 | FastMCP transport | Must use `transport="streamable-http"` in `server.py` — Claude Code connects to `/mcp`, not `/sse` |
 

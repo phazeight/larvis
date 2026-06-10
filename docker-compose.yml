@@ -4,7 +4,7 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - larvis_chroma:/chroma/.chroma
+      - larvis_chroma:/data
 
   larvis:
     build: .
@@ -17,6 +17,7 @@ services:
       CHROMA_HOST: http://chromadb:8000
       VAULT_PATH: /vault
       LINEAR_API_KEY: ${LINEAR_API_KEY}
+      LB_TEAM_KEY: ${LB_TEAM_KEY:-PHA}
     volumes:
       - ${VAULT_PATH}:/vault:ro
       - ./.memory:/app/.memory

@@ -56,4 +56,6 @@ def sync_tasks() -> int:
             )
         except subprocess.TimeoutExpired:
             continue
+    if synced > 0:
+        subprocess.run(["lb", "sync"], capture_output=True, text=True, timeout=30)
     return synced
