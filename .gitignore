@@ -12,3 +12,4 @@ dist/
 .lb/issues.jsonl
 .lb/backups/
 .ynab/cache.db
+.gcal/
