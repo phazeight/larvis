@@ -16,8 +16,10 @@ services:
       OLLAMA_HOST: http://host.docker.internal:11434
       CHROMA_HOST: http://chromadb:8000
       VAULT_PATH: /vault
+      LINEAR_API_KEY: ${LINEAR_API_KEY}
     volumes:
       - ${VAULT_PATH}:/vault:ro
+      - ./.memory:/app/.memory
     depends_on:
       - chromadb
 
