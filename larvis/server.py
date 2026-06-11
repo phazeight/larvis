@@ -4,6 +4,7 @@ from larvis import rag
 from larvis.agents.gcal import tools as gcal_tools
 from larvis.agents.gmail import tools as gmail_tools
 from larvis.agents.lifeos import tools as lifeos_tools
+from larvis.agents.skylight import tools as skylight_tools
 from larvis.agents.ynab import tools as ynab_tools
 from larvis.health import get_status
 
@@ -124,6 +125,30 @@ def gmail_ask(query: str) -> str:
 def gmail_status() -> str:
     """Gmail auth/health check — per-account authorization and unread counts."""
     return gmail_tools.status()
+
+
+@mcp.tool()
+def skylight_chores(within: str = "today") -> str:
+    """List Skylight chores grouped by family member (+ Up for Grabs). within="today" or "week"."""
+    return skylight_tools.chores(within)
+
+
+@mcp.tool()
+def skylight_add_chore(member: str, summary: str, when: str = "today") -> str:
+    """Add/assign a chore. member = a family member name or "up-for-grabs". when=today/tomorrow/YYYY-MM-DD."""
+    return skylight_tools.add_chore(member, summary, when)
+
+
+@mcp.tool()
+def skylight_complete_chore(chore_id: str) -> str:
+    """Mark a Skylight chore complete by its id (from skylight_chores)."""
+    return skylight_tools.complete_chore(chore_id)
+
+
+@mcp.tool()
+def skylight_status() -> str:
+    """Skylight auth/health check — confirms sign-in and lists frame + members."""
+    return skylight_tools.status()
 
 
 def main() -> None:

@@ -71,9 +71,10 @@ MCP reconnects automatically in Claude Code after restart. If larvis doesn't app
 | lb auth inside Docker | `LINEAR_API_KEY` in `.env` — lb reads it via env var, no `~/.config/lb` needed |
 | FastMCP transport | Must use `transport="streamable-http"` in `server.py` — Claude Code connects to `/mcp`, not `/sse` |
 | YNAB cache empty on first run | Run `ynab_sync()` once to populate — persists across restarts |
+| Skylight is an unofficial API | Reverse-engineered `app.ourskylight.com`; email/password in `.env`, token cached in `.skylight/`. Confirm payloads via HAR if calls break. |
 | Gmail multi-account | One OAuth token per inbox in `.gmail/token-<email>.json`; run `larvis gmail-auth <account>` per account |
 
-## MCP tools (Phase 1 + 2 + 3 + 4 + 5)
+## MCP tools (Phase 1 + 2 + 3 + 4 + 5 + 6)
 
 | Tool | Signature | Description |
 |------|-----------|-------------|
@@ -96,6 +97,10 @@ MCP reconnects automatically in Claude Code after restart. If larvis doesn't app
 | `gmail_search` | `(query: str) -> str` | Search mail (Gmail operators) across accounts |
 | `gmail_ask` | `(query: str) -> str` | NL question about your recent email (7 days) |
 | `gmail_status` | `() -> str` | Per-account Gmail auth check + unread counts |
+| `skylight_chores` | `(within?: str) -> str` | Chores grouped by member (+ Up for Grabs) |
+| `skylight_add_chore` | `(member, summary, when?) -> str` | Add/assign a chore (or up-for-grabs) |
+| `skylight_complete_chore` | `(chore_id: str) -> str` | Mark a chore complete |
+| `skylight_status` | `() -> str` | Skylight auth check + frame + members |
 
 ## Session ID convention
 
