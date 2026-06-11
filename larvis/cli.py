@@ -10,6 +10,7 @@ from larvis.health import get_status
 from larvis.indexer import index_vault
 
 GCAL_SCOPES = ["https://www.googleapis.com/auth/calendar.readonly"]
+GMAIL_SCOPES = ["https://www.googleapis.com/auth/gmail.readonly"]
 
 
 @click.group()
@@ -63,3 +64,20 @@ def gcal_auth() -> None:
     with open(settings.gcal_token_path, "w") as f:
         f.write(creds.to_json())
     click.echo(f"Authorized. Token saved to {settings.gcal_token_path}")
+
+
+@cli.command(name="gmail-auth")
+@click.argument("account")
+def gmail_auth(account: str) -> None:
+    """One-time Gmail OAuth for ACCOUNT (email) — opens a browser for read-only consent."""
+    from larvis.agents.gmail import auth as gmail_auth_mod
+
+    os.makedirs(settings.gmail_token_dir, exist_ok=True)
+    flow = InstalledAppFlow.from_client_secrets_file(
+        settings.gmail_credentials_path, GMAIL_SCOPES
+    )
+    creds = flow.run_local_server(port=0)
+    path = gmail_auth_mod.token_path(account)
+    with open(path, "w") as f:
+        f.write(creds.to_json())
+    click.echo(f"Authorized {account}. Token saved to {path}")
