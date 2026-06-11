@@ -71,8 +71,9 @@ MCP reconnects automatically in Claude Code after restart. If larvis doesn't app
 | lb auth inside Docker | `LINEAR_API_KEY` in `.env` — lb reads it via env var, no `~/.config/lb` needed |
 | FastMCP transport | Must use `transport="streamable-http"` in `server.py` — Claude Code connects to `/mcp`, not `/sse` |
 | YNAB cache empty on first run | Run `ynab_sync()` once to populate — persists across restarts |
+| Gmail multi-account | One OAuth token per inbox in `.gmail/token-<email>.json`; run `larvis gmail-auth <account>` per account |
 
-## MCP tools (Phase 1 + 2 + 3 + 4)
+## MCP tools (Phase 1 + 2 + 3 + 4 + 5)
 
 | Tool | Signature | Description |
 |------|-----------|-------------|
@@ -91,6 +92,10 @@ MCP reconnects automatically in Claude Code after restart. If larvis doesn't app
 | `calendar_find_time` | `(duration_minutes: int, within?: str) -> str` | Open slots in working hours |
 | `calendar_ask` | `(query: str) -> str` | NL question about your calendar (next 7 days) |
 | `calendar_status` | `() -> str` | Calendar auth check + configured calendars |
+| `gmail_triage` | `(within?: str) -> str` | Prioritized unread-mail digest across accounts |
+| `gmail_search` | `(query: str) -> str` | Search mail (Gmail operators) across accounts |
+| `gmail_ask` | `(query: str) -> str` | NL question about your recent email (7 days) |
+| `gmail_status` | `() -> str` | Per-account Gmail auth check + unread counts |
 
 ## Session ID convention
 

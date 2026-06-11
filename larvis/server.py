@@ -2,6 +2,7 @@ from fastmcp import FastMCP
 
 from larvis import rag
 from larvis.agents.gcal import tools as gcal_tools
+from larvis.agents.gmail import tools as gmail_tools
 from larvis.agents.lifeos import tools as lifeos_tools
 from larvis.agents.ynab import tools as ynab_tools
 from larvis.health import get_status
@@ -99,6 +100,30 @@ def calendar_ask(query: str) -> str:
 def calendar_status() -> str:
     """Calendar auth/health check — confirms authorization and lists configured calendars."""
     return gcal_tools.status()
+
+
+@mcp.tool()
+def gmail_triage(within: str = "") -> str:
+    """Prioritized digest of unread mail across all accounts. within="" (default 48h), "today", "week", or a Gmail newer_than token like "3d"."""
+    return gmail_tools.triage(within)
+
+
+@mcp.tool()
+def gmail_search(query: str) -> str:
+    """Search mail across all accounts. Supports Gmail operators (from:, subject:, newer_than:)."""
+    return gmail_tools.search(query)
+
+
+@mcp.tool()
+def gmail_ask(query: str) -> str:
+    """Ask a natural-language question about your recent email (last 7 days)."""
+    return gmail_tools.ask(query)
+
+
+@mcp.tool()
+def gmail_status() -> str:
+    """Gmail auth/health check — per-account authorization and unread counts."""
+    return gmail_tools.status()
 
 
 def main() -> None:

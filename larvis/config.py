@@ -22,6 +22,12 @@ class Settings(BaseSettings):
     gcal_calendar_ids: str = "primary"
     gcal_work_start: str = "09:00"
     gcal_work_end: str = "17:00"
+    gmail_accounts: str = "primary"
+    gmail_credentials_path: str = ".gmail/credentials.json"
+    gmail_token_dir: str = ".gmail"
+    gmail_triage_query: str = "is:unread newer_than:2d"
+    gmail_max_messages: int = 40
+    gmail_body_chars: int = 2000
 
 
 settings = Settings()

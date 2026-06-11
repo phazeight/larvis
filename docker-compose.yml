@@ -23,11 +23,18 @@ services:
       GCAL_CALENDAR_IDS: ${GCAL_CALENDAR_IDS:-primary}
       GCAL_WORK_START: ${GCAL_WORK_START:-09:00}
       GCAL_WORK_END: ${GCAL_WORK_END:-17:00}
+      GMAIL_ACCOUNTS: ${GMAIL_ACCOUNTS:-primary}
+      GMAIL_CREDENTIALS_PATH: ${GMAIL_CREDENTIALS_PATH:-.gmail/credentials.json}
+      GMAIL_TOKEN_DIR: ${GMAIL_TOKEN_DIR:-.gmail}
+      GMAIL_TRIAGE_QUERY: ${GMAIL_TRIAGE_QUERY:-is:unread newer_than:2d}
+      GMAIL_MAX_MESSAGES: ${GMAIL_MAX_MESSAGES:-40}
+      GMAIL_BODY_CHARS: ${GMAIL_BODY_CHARS:-2000}
     volumes:
       - ${VAULT_PATH}:/vault:ro
       - ./.memory:/app/.memory
       - ./.ynab:/app/.ynab
       - ./.gcal:/app/.gcal
+      - ./.gmail:/app/.gmail
     depends_on:
       - chromadb
 
