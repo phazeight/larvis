@@ -65,3 +65,27 @@ def test_status_reports_unauthorized(monkeypatch):
     monkeypatch.setattr(client, "unread_count", boom)
     out = tools.status()
     assert "gmail-auth" in out
+
+
+def test_search_empty(monkeypatch):
+    monkeypatch.setattr(client, "collect", lambda q: ([], []))
+    out = tools.search("from:bob")
+    assert "No messages matching" in out
+
+
+def test_search_lists_matches(monkeypatch):
+    monkeypatch.setattr(client, "collect", lambda q: ([_m(subject="Quote")], []))
+    out = tools.search("from:bob")
+    assert "Quote" in out
+
+
+def test_ask_degrades_when_ollama_down(monkeypatch):
+    monkeypatch.setattr(client, "collect", lambda q: ([_m(subject="Trip plans")], []))
+
+    class Boom:
+        def __init__(self, *a, **k):
+            raise RuntimeError("ollama down")
+
+    monkeypatch.setattr(tools.ollama, "Client", Boom)
+    out = tools.ask("what are the trip plans?")
+    assert "Trip plans" in out

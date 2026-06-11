@@ -81,3 +81,35 @@ def status() -> str:
                 f"  ✗ {account} — not authorized (run `larvis gmail-auth {account}`)"
             )
     return "\n".join(lines)
+
+
+def search(query: str) -> str:
+    try:
+        messages, errors = client.collect(query)
+    except Exception as e:
+        return f"Gmail error: {e}"
+    note = _note(errors)
+    if not messages:
+        return f"No messages matching: {query}" + note
+    return f"=== Matches for: {query} ===" + _format_raw(messages) + note
+
+
+def ask(query: str) -> str:
+    # Scan recent mail (read or unread, last 7 days) so the model can answer about threads.
+    try:
+        messages, errors = client.collect("newer_than:7d")
+    except Exception as e:
+        return f"Gmail error: {e}"
+    context = _build_context(messages) if messages else "No recent mail."
+    try:
+        resp = ollama.Client(host=settings.ollama_host).generate(
+            model=settings.ollama_model,
+            prompt=(
+                "You are an email assistant. Answer the question using ONLY the emails "
+                "below. If the answer is not present, say so.\n\n"
+                f"Emails:\n{context}\n\nQuestion: {query}"
+            ),
+        )
+        return resp.response.strip() + _note(errors)
+    except Exception:
+        return context + _note(errors)
