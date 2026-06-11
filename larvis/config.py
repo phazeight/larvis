@@ -28,6 +28,11 @@ class Settings(BaseSettings):
     gmail_triage_query: str = "is:unread newer_than:2d"
     gmail_max_messages: int = 40
     gmail_body_chars: int = 2000
+    skylight_email: str = ""
+    skylight_password: str = ""
+    skylight_frame_id: str = ""
+    skylight_token_path: str = ".skylight/token.json"
+    skylight_base_url: str = "https://app.ourskylight.com/api"
 
 
 settings = Settings()
