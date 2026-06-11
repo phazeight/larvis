@@ -20,10 +20,14 @@ services:
       LB_TEAM_KEY: ${LB_TEAM_KEY:-PHA}
       YNAB_API_KEY: ${YNAB_API_KEY}
       YNAB_BUDGET_ID: ${YNAB_BUDGET_ID:-last-used}
+      GCAL_CALENDAR_IDS: ${GCAL_CALENDAR_IDS:-primary}
+      GCAL_WORK_START: ${GCAL_WORK_START:-09:00}
+      GCAL_WORK_END: ${GCAL_WORK_END:-17:00}
     volumes:
       - ${VAULT_PATH}:/vault:ro
       - ./.memory:/app/.memory
       - ./.ynab:/app/.ynab
+      - ./.gcal:/app/.gcal
     depends_on:
       - chromadb
 

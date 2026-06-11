@@ -72,7 +72,7 @@ MCP reconnects automatically in Claude Code after restart. If larvis doesn't app
 | FastMCP transport | Must use `transport="streamable-http"` in `server.py` — Claude Code connects to `/mcp`, not `/sse` |
 | YNAB cache empty on first run | Run `ynab_sync()` once to populate — persists across restarts |
 
-## MCP tools (Phase 1 + 2 + 3)
+## MCP tools (Phase 1 + 2 + 3 + 4)
 
 | Tool | Signature | Description |
 |------|-----------|-------------|
@@ -87,6 +87,10 @@ MCP reconnects automatically in Claude Code after restart. If larvis doesn't app
 | `ynab_status` | `() -> str` | Budget dashboard — TBB, age of money, over-budget |
 | `ynab_ask` | `(query: str) -> str` | NL budget query — Python math, Ollama narrates |
 | `ynab_upcoming` | `() -> str` | Scheduled transactions due in next 14 days |
+| `calendar_agenda` | `(range?: str) -> str` | Calendar agenda — "today" or "week" |
+| `calendar_find_time` | `(duration_minutes: int, within?: str) -> str` | Open slots in working hours |
+| `calendar_ask` | `(query: str) -> str` | NL question about your calendar (next 7 days) |
+| `calendar_status` | `() -> str` | Calendar auth check + configured calendars |
 
 ## Session ID convention
 

@@ -1,6 +1,7 @@
 from fastmcp import FastMCP
 
 from larvis import rag
+from larvis.agents.gcal import tools as gcal_tools
 from larvis.agents.lifeos import tools as lifeos_tools
 from larvis.agents.ynab import tools as ynab_tools
 from larvis.health import get_status
@@ -74,6 +75,30 @@ def ynab_ask(query: str) -> str:
 def ynab_upcoming() -> str:
     """List scheduled transactions due in the next 14 days."""
     return ynab_tools.upcoming()
+
+
+@mcp.tool()
+def calendar_agenda(range: str = "today") -> str:
+    """Your calendar agenda. range="today" (full day) or "week" (next 7 days)."""
+    return gcal_tools.agenda(range)
+
+
+@mcp.tool()
+def calendar_find_time(duration_minutes: int, within: str = "week") -> str:
+    """Find open slots >= duration_minutes within working hours. within="today" or "week"."""
+    return gcal_tools.find_time(duration_minutes, within)
+
+
+@mcp.tool()
+def calendar_ask(query: str) -> str:
+    """Ask a natural-language question about your calendar (next 7 days)."""
+    return gcal_tools.ask(query)
+
+
+@mcp.tool()
+def calendar_status() -> str:
+    """Calendar auth/health check — confirms authorization and lists configured calendars."""
+    return gcal_tools.status()
 
 
 def main() -> None:

@@ -17,6 +17,11 @@ class Settings(BaseSettings):
     chunk_overlap: int = 50
     ynab_api_key: str = ""
     ynab_budget_id: str = "last-used"
+    gcal_credentials_path: str = ".gcal/credentials.json"
+    gcal_token_path: str = ".gcal/token.json"
+    gcal_calendar_ids: str = "primary"
+    gcal_work_start: str = "09:00"
+    gcal_work_end: str = "17:00"
 
 
 settings = Settings()
