@@ -81,25 +81,30 @@ larvis/agents/skylight/
 ### Configuration (`config.py` + `.env.example`)
 
 ```
-SKYLIGHT_EMAIL=
-SKYLIGHT_PASSWORD=
 SKYLIGHT_FRAME_ID=
 SKYLIGHT_TOKEN_PATH=.skylight/token.json
-SKYLIGHT_BASE_URL=https://app.ourskylight.com/api
+SKYLIGHT_BASE_URL=https://app.ourskylight.com
 ```
 
-`config.py` fields: `skylight_email`, `skylight_password`, `skylight_frame_id`,
-`skylight_token_path`, `skylight_base_url`. Docker: `SKYLIGHT_*` env + `./.skylight:/app/.skylight`
-bind mount (mirrors `.ynab`/`.gcal`). `.skylight/` is gitignored. No new Python deps —
-`httpx` is already used by the YNAB agent.
+`config.py` fields: `skylight_frame_id`, `skylight_token_path`, `skylight_base_url`. Docker:
+`SKYLIGHT_*` env + `./.skylight:/app/.skylight` bind mount (mirrors `.ynab`/`.gcal`).
+`.skylight/` is gitignored. No new Python deps — `httpx` is already used by the YNAB agent.
 
-### Authentication flow
+### Authentication flow (OAuth2 — corrected after HAR capture)
 
-- `auth.get_token()` signs in with `SKYLIGHT_EMAIL` / `SKYLIGHT_PASSWORD`, obtains the
-  token, and caches it to `SKYLIGHT_TOKEN_PATH`. The exact sign-in endpoint and
-  `Authorization` header format are pinned from the community spec during implementation.
-- On a `401` from any call, the client re-authenticates once (refreshing the cached token)
-  and retries; a second failure surfaces as an error.
+Skylight has **no email/password API endpoint**. It uses OAuth2 (`client_id=skylight-mobile`).
+The interactive authorization-code login happens once in the browser; the agent then runs
+headlessly off the resulting tokens:
+- `.skylight/token.json` is seeded once with `{access_token, refresh_token}` captured from
+  the Skylight web app.
+- `auth.auth_header()` returns `Authorization: Bearer <access_token>`.
+- On a `401`, `client` calls `auth.refresh()` — `POST /oauth/token`
+  (`grant_type=refresh_token`, `client_id=skylight-mobile`) — persists the new tokens, and
+  retries once.
+- All API requests also send `skylight-api-version: 2026-05-01` (required for
+  `include_up_for_grabs`). Endpoints: `GET /api/frames/{id}/categories`,
+  `GET /api/frames/{id}/chores`, `POST /api/frames/{id}/chores/create_multiple`,
+  `PUT /api/frames/{id}/chores/{cid}/completions`.
 
 ### Data flow (per query)
 
