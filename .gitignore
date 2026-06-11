@@ -13,3 +13,4 @@ dist/
 .lb/backups/
 .ynab/cache.db
 .gcal/
+.gmail/
