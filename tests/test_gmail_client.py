@@ -66,3 +66,31 @@ def test_parse_message_truncates_body():
 def test_accounts_splits_and_trims(monkeypatch):
     monkeypatch.setattr(client.settings, "gmail_accounts", "a@x.com, b@y.com ,")
     assert client._accounts() == ["a@x.com", "b@y.com"]
+
+
+def test_clean_text_decodes_html_entities():
+    assert client._clean_text('Shipped: &quot;Sun Bum&quot; &amp; more') == 'Shipped: "Sun Bum" & more'
+
+
+def test_clean_text_strips_zero_width_chars():
+    assert client._clean_text("Hel‌lo͏ world​") == "Hello world"
+
+
+def test_clean_text_collapses_whitespace():
+    assert client._clean_text("a   b\n\tc") == "a b c"
+
+
+def test_strip_html_decodes_entities():
+    assert client._strip_html("<p>Tom &amp; Jerry &#39;99</p>") == "Tom & Jerry '99"
+
+
+def test_parse_message_cleans_subject_and_snippet():
+    msg = _msg(plain="body", subject="Re: &quot;Order&quot;", snippet="Delivered&#39;͏ ‌ now")
+    parsed = client.parse_message(msg, "luke@gmail.com", body_chars=1000)
+    assert parsed["subject"] == 'Re: "Order"'
+    assert parsed["snippet"] == "Delivered' now"
+
+
+def test_clean_text_strips_bidi_isolates():
+    # Amazon wraps numbers in U+2066..U+2069 directional isolates.
+    assert client._clean_text("⁦2⁩ more items") == "2 more items"

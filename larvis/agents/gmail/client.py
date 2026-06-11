@@ -1,23 +1,44 @@
 import base64
+import html
 import re
 from email.utils import parseaddr
 
 from larvis.agents.gmail import auth
 from larvis.config import settings
 
+# Zero-width / invisible characters Gmail pads snippets and bodies with
+# (soft hyphen, combining grapheme joiner, ZWSP..RLM, bidi controls, word joiner, BOM).
+_INVISIBLE_RANGES = [
+    (0x00AD, 0x00AD),
+    (0x034F, 0x034F),
+    (0x200B, 0x200F),
+    (0x202A, 0x202E),
+    (0x2060, 0x2060),
+    (0x2066, 0x2069),
+    (0xFEFF, 0xFEFF),
+]
+_INVISIBLE = re.compile("[" + "".join(f"{chr(lo)}-{chr(hi)}" for lo, hi in _INVISIBLE_RANGES) + "]")
+
 
 def _accounts() -> list[str]:
     return [a.strip() for a in settings.gmail_accounts.split(",") if a.strip()]
+
+
+def _clean_text(s: str) -> str:
+    """Decode HTML entities, strip zero-width chars, collapse whitespace."""
+    s = html.unescape(s)
+    s = _INVISIBLE.sub("", s)
+    return re.sub(r"\s+", " ", s).strip()
 
 
 def _decode(data: str) -> str:
     return base64.urlsafe_b64decode(data.encode("utf-8")).decode("utf-8", errors="replace")
 
 
-def _strip_html(html: str) -> str:
-    text = re.sub(r"(?is)<(script|style).*?</\1>", " ", html)
+def _strip_html(html_str: str) -> str:
+    text = re.sub(r"(?is)<(script|style).*?</\1>", " ", html_str)
     text = re.sub(r"(?s)<[^>]+>", " ", text)
-    return re.sub(r"\s+", " ", text).strip()
+    return _clean_text(text)
 
 
 def _header(headers: list[dict], name: str) -> str:
@@ -43,9 +64,9 @@ def _extract_body(payload: dict) -> str:
     plain = _find_part(payload, "text/plain")
     if plain:
         return plain
-    html = _find_part(payload, "text/html")
-    if html:
-        return _strip_html(html)
+    html_body = _find_part(payload, "text/html")
+    if html_body:
+        return _strip_html(html_body)
     return ""
 
 
@@ -56,12 +77,13 @@ def parse_message(msg: dict, account: str, body_chars: int) -> dict:
     return {
         "id": msg.get("id"),
         "account": account,
-        "from_name": name or addr,
+        "from_name": _clean_text(name) or addr,
         "from_addr": addr,
-        "subject": _header(headers, "Subject") or "(no subject)",
+        "subject": _clean_text(_header(headers, "Subject")) or "(no subject)",
         "date": _header(headers, "Date"),
-        "snippet": msg.get("snippet", ""),
+        "snippet": _clean_text(msg.get("snippet", "")),
         "body": _extract_body(payload)[:body_chars],
+        "labels": msg.get("labelIds", []),
     }
 
 
