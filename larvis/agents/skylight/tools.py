@@ -53,3 +53,65 @@ def status() -> str:
     lines = [f"Skylight authorized. Frame: {settings.skylight_frame_id}", "Members:"]
     lines.extend(f"  - {m['name']}" for m in members)
     return "\n".join(lines)
+
+
+_UP_FOR_GRABS = {"up-for-grabs", "up for grabs", "anyone", "unassigned"}
+
+
+def _is_up_for_grabs(member: str) -> bool:
+    return member.strip().lower() in _UP_FOR_GRABS
+
+
+def _normalize_when(when: str) -> str:
+    value = (when or "today").strip().lower()
+    today = date.today()
+    if value == "today":
+        return today.isoformat()
+    if value == "tomorrow":
+        return (today + timedelta(days=1)).isoformat()
+    date.fromisoformat(value)  # validates ISO; raises ValueError otherwise
+    return value
+
+
+def _resolve_member(name: str, members: list[dict]) -> str:
+    for m in members:
+        if (m["name"] or "").strip().lower() == name.strip().lower():
+            return m["id"]
+    known = ", ".join(m["name"] for m in members) or "(none)"
+    raise ValueError(f'Unknown member \'{name}\'. Known: {known} (or "up-for-grabs").')
+
+
+def add_chore(member: str, summary: str, when: str = "today") -> str:
+    try:
+        day = _normalize_when(when)
+    except ValueError:
+        return f"Couldn't parse date '{when}' — use today, tomorrow, or YYYY-MM-DD."
+
+    try:
+        if _is_up_for_grabs(member):
+            category_id = None
+            who = "Up for Grabs"
+        else:
+            members = client.get_categories()
+            try:
+                category_id = _resolve_member(member, members)
+            except ValueError as e:
+                return str(e)
+            who = next(
+                (m["name"] for m in members if m["id"] == category_id),
+                member,
+            )
+        client.create_chore(summary, day, category_id)
+    except Exception as e:
+        return f"Skylight error: {e}"
+    return f'✓ Added "{summary}" to {who} ({day}).'
+
+
+def complete_chore(chore_id: str) -> str:
+    if not chore_id.strip():
+        return "Provide a chore_id (see skylight_chores)."
+    try:
+        client.complete_chore(chore_id.strip())
+    except Exception as e:
+        return f"Skylight error: {e}"
+    return f"✓ Marked chore {chore_id.strip()} complete."
