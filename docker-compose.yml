@@ -29,12 +29,18 @@ services:
       GMAIL_TRIAGE_QUERY: ${GMAIL_TRIAGE_QUERY:-is:unread newer_than:2d}
       GMAIL_MAX_MESSAGES: ${GMAIL_MAX_MESSAGES:-40}
       GMAIL_BODY_CHARS: ${GMAIL_BODY_CHARS:-2000}
+      SKYLIGHT_EMAIL: ${SKYLIGHT_EMAIL:-}
+      SKYLIGHT_PASSWORD: ${SKYLIGHT_PASSWORD:-}
+      SKYLIGHT_FRAME_ID: ${SKYLIGHT_FRAME_ID:-}
+      SKYLIGHT_TOKEN_PATH: ${SKYLIGHT_TOKEN_PATH:-.skylight/token.json}
+      SKYLIGHT_BASE_URL: ${SKYLIGHT_BASE_URL:-https://app.ourskylight.com/api}
     volumes:
       - ${VAULT_PATH}:/vault:ro
       - ./.memory:/app/.memory
       - ./.ynab:/app/.ynab
       - ./.gcal:/app/.gcal
       - ./.gmail:/app/.gmail
+      - ./.skylight:/app/.skylight
     depends_on:
       - chromadb
 
