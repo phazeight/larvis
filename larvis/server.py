@@ -7,6 +7,7 @@ from larvis.agents.lifeos import tools as lifeos_tools
 from larvis.agents.skylight import tools as skylight_tools
 from larvis.agents.ynab import tools as ynab_tools
 from larvis.health import get_status
+from larvis.orchestrator import tools as orchestrator_tools
 
 mcp = FastMCP("Larvis")
 
@@ -149,6 +150,18 @@ def skylight_complete_chore(chore_id: str) -> str:
 def skylight_status() -> str:
     """Skylight auth/health check — confirms sign-in and lists frame + members."""
     return skylight_tools.status()
+
+
+@mcp.tool()
+def larvis_orchestrate(query: str) -> str:
+    """Larvis front door — routes your request across all agents and answers, or proposes a write to confirm."""
+    return orchestrator_tools.orchestrate(query)
+
+
+@mcp.tool()
+def larvis_confirm(token: str) -> str:
+    """Execute a write action that larvis_orchestrate proposed (pass the token it returned)."""
+    return orchestrator_tools.confirm(token)
 
 
 def main() -> None:

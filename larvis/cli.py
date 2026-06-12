@@ -81,3 +81,12 @@ def gmail_auth(account: str) -> None:
     with open(path, "w") as f:
         f.write(creds.to_json())
     click.echo(f"Authorized {account}. Token saved to {path}")
+
+
+@cli.command()
+@click.argument("query")
+def orchestrate(query: str) -> None:
+    """Ask Larvis anything — routes across all agents and answers."""
+    from larvis.orchestrator import tools as orchestrator_tools
+
+    click.echo(orchestrator_tools.orchestrate(query))
