@@ -1,6 +1,9 @@
 from fastmcp import FastMCP
+from starlette.concurrency import run_in_threadpool
+from starlette.requests import Request
+from starlette.responses import JSONResponse, StreamingResponse
 
-from larvis import rag
+from larvis import openai_api, rag
 from larvis.agents.gcal import tools as gcal_tools
 from larvis.agents.gmail import tools as gmail_tools
 from larvis.agents.lifeos import tools as lifeos_tools
@@ -162,6 +165,38 @@ def larvis_orchestrate(query: str) -> str:
 def larvis_confirm(token: str) -> str:
     """Execute a write action that larvis_orchestrate proposed (pass the token it returned)."""
     return orchestrator_tools.confirm(token)
+
+
+@mcp.custom_route("/v1/models", methods=["GET"])
+async def openai_models(request: Request) -> JSONResponse:
+    return JSONResponse(openai_api.models_response())
+
+
+@mcp.custom_route("/v1/chat/completions", methods=["POST"])
+async def openai_chat_completions(request: Request):
+    try:
+        body = await request.json()
+    except Exception:
+        return JSONResponse(
+            {"error": {"message": "Invalid JSON body", "type": "invalid_request_error"}},
+            status_code=400,
+        )
+    query = openai_api.last_user_message(body.get("messages") or [])
+    if not query:
+        return JSONResponse(
+            {"error": {"message": "No user message provided", "type": "invalid_request_error"}},
+            status_code=400,
+        )
+    model = body.get("model") or "larvis"
+    try:
+        content = await run_in_threadpool(openai_api.answer, model, query)
+    except Exception as e:  # surface as assistant text so the sidebar shows something
+        content = f"Larvis error: {e}"
+    if body.get("stream"):
+        return StreamingResponse(
+            openai_api.stream_chunks(model, content), media_type="text/event-stream"
+        )
+    return JSONResponse(openai_api.completion_response(model, content))
 
 
 def main() -> None:
