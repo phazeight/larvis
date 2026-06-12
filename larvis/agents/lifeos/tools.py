@@ -1,4 +1,6 @@
+import re
 from datetime import date
+from pathlib import Path
 
 import ollama
 
@@ -6,20 +8,46 @@ from larvis.agents.lifeos import memory, linear_sync
 from larvis.config import settings
 from larvis.rag import search as vault_search
 
+_UNCHECKED_TASK = re.compile(r"^- \[ \] (.+)$", re.MULTILINE)
+_DUE_DATE = re.compile(r"📅\s*(\d{4}-\d{2}-\d{2})")
+
+
+def find_overdue_tasks(vault_path, today: str) -> list[dict]:
+    """Unchecked tasks with a 📅 due date strictly before `today` (ISO string)."""
+    overdue: list[dict] = []
+    for md_file in Path(vault_path).rglob("*.md"):
+        try:
+            content = md_file.read_text(encoding="utf-8")
+        except (OSError, UnicodeDecodeError):
+            continue
+        for match in _UNCHECKED_TASK.finditer(content):
+            line = match.group(1).strip()
+            due = _DUE_DATE.search(line)
+            if due and due.group(1) < today:
+                overdue.append({"text": line, "due": due.group(1)})
+    return overdue
+
 
 def briefing(session_id: str) -> str:
     today = date.today().isoformat()
 
     project_chunks = vault_search("active projects status", top_k=5)
     task_chunks = vault_search("overdue tasks this week", top_k=5)
+    overdue = find_overdue_tasks(settings.vault_path, today)
     commitments = memory.get_open_commitments()
 
-    if not project_chunks and not task_chunks and not commitments:
+    if not project_chunks and not task_chunks and not commitments and not overdue:
         return "Vault not indexed — run `larvis reindex` first."
 
     context_parts = []
     if project_chunks:
         context_parts.append("Active project context:\n" + "\n---\n".join(project_chunks))
+    if overdue:
+        overdue_lines = "\n".join(f"- {o['text']} (due {o['due']})" for o in overdue[:20])
+        context_parts.append(
+            f"OVERDUE tasks (unchecked, past due as of {today}) — list these explicitly:\n"
+            + overdue_lines
+        )
     if task_chunks:
         context_parts.append("Task context:\n" + "\n---\n".join(task_chunks))
     if commitments:
