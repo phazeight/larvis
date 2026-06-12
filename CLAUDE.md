@@ -73,6 +73,7 @@ MCP reconnects automatically in Claude Code after restart. If larvis doesn't app
 | YNAB cache empty on first run | Run `ynab_sync()` once to populate — persists across restarts |
 | Skylight is an unofficial API | Reverse-engineered `app.ourskylight.com`; email/password in `.env`, token cached in `.skylight/`. Confirm payloads via HAR if calls break. |
 | Gmail multi-account | One OAuth token per inbox in `.gmail/token-<email>.json`; run `larvis gmail-auth <account>` per account |
+| Orchestrator write safety | `larvis_orchestrate` never writes; it proposes a token, `larvis_confirm` executes. Tokens are in-process (MCP server). |
 
 ## MCP tools (Phase 1 + 2 + 3 + 4 + 5 + 6)
 
@@ -101,6 +102,8 @@ MCP reconnects automatically in Claude Code after restart. If larvis doesn't app
 | `skylight_add_chore` | `(member, summary, when?) -> str` | Add/assign a chore (or up-for-grabs) |
 | `skylight_complete_chore` | `(chore_id: str) -> str` | Mark a chore complete |
 | `skylight_status` | `() -> str` | Skylight auth check + frame + members |
+| `larvis_orchestrate` | `(query: str) -> str` | Front door — routes across all agents + synthesizes; proposes writes |
+| `larvis_confirm` | `(token: str) -> str` | Execute a proposed write action by token |
 
 ## Session ID convention
 
