@@ -25,6 +25,7 @@ def find_overdue_tasks(vault_path, today: str) -> list[dict]:
             due = _DUE_DATE.search(line)
             if due and due.group(1) < today:
                 overdue.append({"text": line, "due": due.group(1)})
+    overdue.sort(key=lambda o: o["due"], reverse=True)  # most recently due first
     return overdue
 
 
@@ -43,10 +44,12 @@ def briefing(session_id: str) -> str:
     if project_chunks:
         context_parts.append("Active project context:\n" + "\n---\n".join(project_chunks))
     if overdue:
-        overdue_lines = "\n".join(f"- {o['text']} (due {o['due']})" for o in overdue[:20])
+        shown = overdue[:10]  # most recently due first
+        overdue_lines = "\n".join(f"- {o['text']} (due {o['due']})" for o in shown)
+        more = f"\n(+{len(overdue) - len(shown)} more overdue)" if len(overdue) > len(shown) else ""
         context_parts.append(
-            f"OVERDUE tasks (unchecked, past due as of {today}) — list these explicitly:\n"
-            + overdue_lines
+            f"OVERDUE tasks (unchecked, past due as of {today}; most recent first) — "
+            f"list these explicitly:\n" + overdue_lines + more
         )
     if task_chunks:
         context_parts.append("Task context:\n" + "\n---\n".join(task_chunks))
