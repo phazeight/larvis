@@ -20,17 +20,26 @@ def search(query: str, top_k: int | None = None) -> list[str]:
     return results["documents"][0]
 
 
-def ask(query: str) -> str:
-    chunks = search(query)
-    context = "\n\n---\n\n".join(chunks)
-    prompt = (
-        "You are Larvis, a personal assistant. Use the following context from "
-        "the user's LifeOS vault to answer their question. If the context does "
-        "not contain enough information to answer, say so clearly.\n\n"
+_NO_INFO = "I couldn't find anything about that in your vault."
+
+
+def _build_prompt(query: str, context: str) -> str:
+    return (
+        "You are Larvis, a personal assistant. Answer the question using ONLY the "
+        "context below from the user's LifeOS vault. Do NOT use outside knowledge and "
+        "do NOT pull in unrelated notes. If the context does not directly address the "
+        f"question, reply EXACTLY with: {_NO_INFO}\n\n"
         f"Context:\n{context}\n\n"
         f"Question: {query}"
     )
+
+
+def ask(query: str) -> str:
+    chunks = [c for c in search(query) if c and c.strip()]
+    if not chunks:
+        return _NO_INFO
+    context = "\n\n---\n\n".join(chunks)
     resp = ollama.Client(host=settings.ollama_host).generate(
-        model=settings.ollama_model, prompt=prompt
+        model=settings.ollama_model, prompt=_build_prompt(query, context)
     )
     return resp.response

@@ -7,6 +7,15 @@ from larvis.config import settings
 
 _TASK_PATTERN = re.compile(r"^- \[ \] (.+)$", re.MULTILINE)
 _TAG = "#to-linear"
+_TIME_PREFIX = re.compile(r"^\d{1,2}:\d{2}\s+")
+_DUE_DATE = re.compile(r"\s*📅\s*\d{4}-\d{2}-\d{2}")
+
+
+def _clean_task_text(line: str) -> str:
+    text = line.replace(_TAG, "")
+    text = _DUE_DATE.sub("", text)
+    text = _TIME_PREFIX.sub("", text.strip())
+    return text.strip()
 
 
 def scan_vault_for_tagged_tasks(vault_path: Path) -> list[dict]:
@@ -20,7 +29,7 @@ def scan_vault_for_tagged_tasks(vault_path: Path) -> list[dict]:
             line = match.group(1)
             if _TAG not in line:
                 continue
-            task_text = line.replace(_TAG, "").strip()
+            task_text = _clean_task_text(line)
             tasks.append({
                 "vault_file": str(md_file.relative_to(vault_path)),
                 "task_text": task_text,

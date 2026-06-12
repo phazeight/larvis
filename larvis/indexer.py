@@ -1,3 +1,4 @@
+import re
 from pathlib import Path
 from urllib.parse import urlparse
 
@@ -7,6 +8,18 @@ import ollama
 import tiktoken
 
 from larvis.config import settings
+
+# Strip Obsidian/LifeOS noise so real content dominates each chunk's embedding:
+# fenced code blocks (incl. Dataview and PeriodicPARA query blocks) and %%comments%%.
+_CODE_FENCE = re.compile(r"```.*?```", re.DOTALL)
+_OBSIDIAN_COMMENT = re.compile(r"%%.*?%%", re.DOTALL)
+
+
+def _clean_for_index(text: str) -> str:
+    text = _CODE_FENCE.sub("", text)
+    text = _OBSIDIAN_COMMENT.sub("", text)
+    lines = [ln for ln in text.splitlines() if ln.strip()]
+    return "\n".join(lines).strip()
 
 
 def chunk_text(text: str, size: int, overlap: int) -> list[str]:
@@ -36,7 +49,14 @@ def index_vault() -> int:
         raise RuntimeError(f"Vault path not found: {vault}")
 
     ollama_client = ollama.Client(host=settings.ollama_host)
-    collection = _chroma().get_or_create_collection(settings.chroma_collection)
+    chroma = _chroma()
+    # Full rebuild: drop the old collection first so stale chunks from changed or
+    # removed files don't linger (upsert alone never deletes old chunk ids).
+    try:
+        chroma.delete_collection(settings.chroma_collection)
+    except Exception:
+        pass
+    collection = chroma.get_or_create_collection(settings.chroma_collection)
 
     doc_count = 0
     for md_file in vault.rglob("*.md"):
@@ -44,7 +64,7 @@ def index_vault() -> int:
             post = frontmatter.load(md_file)
         except Exception:
             continue
-        content = post.content.strip()
+        content = _clean_for_index(post.content)
         if not content:
             continue
         metadata = {
