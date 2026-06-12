@@ -63,17 +63,25 @@ def gather(agents: list[str], query: str, session_id: str) -> dict[str, str]:
     return blocks
 
 
+def _extract_prompt(action: dict, query: str) -> str:
+    fields = ", ".join(action["fields"])
+    return (
+        f"Extract a flat JSON object with EXACTLY these keys: {fields}.\n"
+        "Rules: copy values EXACTLY as written in the request. Never replace a name with "
+        "a pronoun like 'you' or 'me' — use the literal name. For a 'when' field use today, "
+        "tomorrow, or YYYY-MM-DD. Output ONLY the JSON object, no prose.\n"
+        'Example — Request: "add wash dishes to Sam tomorrow" -> '
+        '{"member": "Sam", "summary": "wash dishes", "when": "tomorrow"}\n\n'
+        f"Request: {query}"
+    )
+
+
 def extract_params(action: dict, query: str) -> dict:
     fields = ", ".join(action["fields"])
     try:
         resp = ollama.Client(host=settings.ollama_host).generate(
             model=settings.ollama_model,
-            prompt=(
-                f"Extract a flat JSON object with EXACTLY these keys: {fields}. "
-                "For a 'when' field use today, tomorrow, or YYYY-MM-DD. "
-                "Output ONLY the JSON object, no prose.\n\n"
-                f"Request: {query}"
-            ),
+            prompt=_extract_prompt(action, query),
         )
         text = resp.response
         text = text[text.find("{"): text.rfind("}") + 1]

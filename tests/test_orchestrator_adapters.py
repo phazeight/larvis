@@ -50,3 +50,12 @@ def test_extract_params_raises_on_garbage(monkeypatch):
     action = {"tool": "lifeos_commit", "fields": ["text"]}
     with pytest.raises(ValueError):
         adapters.extract_params(action, "remember milk")
+
+
+def test_extract_prompt_includes_fields_query_and_guardrails():
+    action = {"tool": "skylight_add_chore", "fields": ["member", "summary", "when"]}
+    p = adapters._extract_prompt(action, "add trash to Cal today")
+    assert "member, summary, when" in p
+    assert "add trash to Cal today" in p
+    low = p.lower()
+    assert "exact" in low and "pronoun" in low and "example" in low
