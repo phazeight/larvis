@@ -1,3 +1,4 @@
+import re
 from pathlib import Path
 from urllib.parse import urlparse
 
@@ -7,6 +8,18 @@ import ollama
 import tiktoken
 
 from larvis.config import settings
+
+# Strip Obsidian/LifeOS noise so real content dominates each chunk's embedding:
+# fenced code blocks (incl. Dataview and PeriodicPARA query blocks) and %%comments%%.
+_CODE_FENCE = re.compile(r"```.*?```", re.DOTALL)
+_OBSIDIAN_COMMENT = re.compile(r"%%.*?%%", re.DOTALL)
+
+
+def _clean_for_index(text: str) -> str:
+    text = _CODE_FENCE.sub("", text)
+    text = _OBSIDIAN_COMMENT.sub("", text)
+    lines = [ln for ln in text.splitlines() if ln.strip()]
+    return "\n".join(lines).strip()
 
 
 def chunk_text(text: str, size: int, overlap: int) -> list[str]:
@@ -44,7 +57,7 @@ def index_vault() -> int:
             post = frontmatter.load(md_file)
         except Exception:
             continue
-        content = post.content.strip()
+        content = _clean_for_index(post.content)
         if not content:
             continue
         metadata = {
