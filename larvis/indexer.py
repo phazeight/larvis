@@ -49,7 +49,14 @@ def index_vault() -> int:
         raise RuntimeError(f"Vault path not found: {vault}")
 
     ollama_client = ollama.Client(host=settings.ollama_host)
-    collection = _chroma().get_or_create_collection(settings.chroma_collection)
+    chroma = _chroma()
+    # Full rebuild: drop the old collection first so stale chunks from changed or
+    # removed files don't linger (upsert alone never deletes old chunk ids).
+    try:
+        chroma.delete_collection(settings.chroma_collection)
+    except Exception:
+        pass
+    collection = chroma.get_or_create_collection(settings.chroma_collection)
 
     doc_count = 0
     for md_file in vault.rglob("*.md"):
