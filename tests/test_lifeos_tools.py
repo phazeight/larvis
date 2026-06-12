@@ -22,3 +22,14 @@ def test_find_overdue_tasks_reports_due_date(tmp_path):
     (tmp_path / "n.md").write_text("- [ ] pay bill 📅 2026-01-05\n", encoding="utf-8")
     overdue = tools.find_overdue_tasks(tmp_path, "2026-06-12")
     assert overdue[0]["due"] == "2026-01-05"
+
+
+def test_find_overdue_tasks_sorted_most_recent_due_first(tmp_path):
+    (tmp_path / "n.md").write_text(
+        "- [ ] old one 📅 2026-04-06\n"
+        "- [ ] recent one 📅 2026-06-11\n"
+        "- [ ] middle one 📅 2026-05-01\n",
+        encoding="utf-8",
+    )
+    overdue = tools.find_overdue_tasks(tmp_path, "2026-06-12")
+    assert [o["due"] for o in overdue] == ["2026-06-11", "2026-05-01", "2026-04-06"]
