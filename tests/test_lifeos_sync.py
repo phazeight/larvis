@@ -46,3 +46,14 @@ def test_scan_returns_empty_for_vault_with_no_tagged_tasks(tmp_path):
     note.write_text("- [ ] Just a normal task\n")
     tasks = scan_vault_for_tagged_tasks(tmp_path)
     assert len(tasks) == 0
+
+
+def test_clean_task_text_strips_time_date_and_tag():
+    from larvis.agents.lifeos import linear_sync
+    out = linear_sync._clean_task_text("10:34 buildout deep ask in obsidian 📅 2026-06-12 #to-linear")
+    assert out == "buildout deep ask in obsidian"
+
+
+def test_clean_task_text_plain_task():
+    from larvis.agents.lifeos import linear_sync
+    assert linear_sync._clean_task_text("Fix the dishwasher gasket #to-linear") == "Fix the dishwasher gasket"
