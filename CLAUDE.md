@@ -105,6 +105,17 @@ MCP reconnects automatically in Claude Code after restart. If larvis doesn't app
 | `larvis_orchestrate` | `(query: str) -> str` | Front door — routes across all agents + synthesizes; proposes writes |
 | `larvis_confirm` | `(token: str) -> str` | Execute a proposed write action by token |
 
+## OpenAI-compatible endpoint (Deep Ask / Obsidian)
+
+Larvis also serves an OpenAI-compatible API on the same port, so the Deep Ask Obsidian plugin (or any OpenAI-compatible client) can use it directly — no Claude Code needed:
+
+- `POST http://localhost:8765/v1/chat/completions` — chat completions (streaming + non-streaming)
+- `GET  http://localhost:8765/v1/models`
+
+Models: `larvis-vault` (vault RAG via `rag.ask`) and `larvis` (full orchestrator). Only the last user message is used (no multi-turn memory yet); the API key is accepted but ignored (localhost).
+
+**Deep Ask setup:** Base URL `http://localhost:8765/v1`, API Key = any value, Model = `larvis-vault` or `larvis`.
+
 ## Session ID convention
 
 Pass any stable string as `session_id` for lifeos tools. In Claude Code, use the conversation ID or any UUID. The same `session_id` groups conversation history together for multi-turn memory.
