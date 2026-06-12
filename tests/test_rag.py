@@ -29,3 +29,21 @@ def test_build_prompt_has_grounding_guardrail():
     assert "only" in low
     assert "outside knowledge" in low
     assert rag._NO_INFO in p
+
+
+def test_salient_terms_drops_stopwords_keeps_name():
+    assert rag._salient_terms("how much did I say to Alex?") == ["alex"]
+
+
+def test_salient_terms_keeps_content_words():
+    terms = rag._salient_terms("what's my garage cleanout budget?")
+    assert "garage" in terms and "cleanout" in terms and "budget" in terms
+    assert "my" not in terms and "what" not in terms
+
+
+def test_merge_puts_lexical_first_and_dedupes():
+    assert rag._merge(["A", "B"], ["B", "C", "D"], 3) == ["A", "B", "C"]
+
+
+def test_merge_respects_k():
+    assert rag._merge(["A"], ["B", "C", "D"], 2) == ["A", "B"]
